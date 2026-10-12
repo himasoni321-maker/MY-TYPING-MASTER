@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Keyboard Typing Master</title>
+    <style>
+        body {
+            background-color: #1e1e24;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 {
+            margin: 5px;
+            color: #00adb5;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            background-color: #222831;
+            border: 4px solid #00adb5;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .word {
+            position: absolute;
+            font-size: 22px;
+            font-weight: bold;
+            color: #eeeeee;
+            background-color: #393e46;
+            padding: 5px 12px;
+            border-radius: 5px;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        #input-field {
+            margin-top: 20px;
+            padding: 12px;
+            font-size: 20px;
+            width: 300px;
+            border: 2px solid #393e46;
+            border-radius: 5px;
+            background-color: #eeeeee;
+            color: #222831;
+            text-align: center;
+            outline: none;
+        }
+        #input-field:focus {
+            border-color: #00adb5;
+        }
+        #stats {
+            display: flex;
+            gap: 40px;
+            font-size: 20px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .stat-box {
+            background: #393e46;
+            padding: 8px 20px;
+            border-radius: 5px;
+            border-bottom: 3px solid #00adb5;
+        }
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(34, 40, 49, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #00adb5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        button:hover {
+            background-color: #007c82;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Online Typing Game ⌨️</h1>
+    
+    <div id="game-container">
+        <div id="game-over-screen">
+            <h2 style="font-size: 36px; color: #ff2e63; margin-bottom: 10px; text-transform: uppercase;">Game Over!</h2>
+            <p id="final-score" style="font-size: 20px; margin-bottom: 20px;">Your Score: 0</p>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <input type="text" id="input-field" placeholder="Type here..." autocomplete="off" disabled>
+
+    <div id="stats">
+        <div class="stat-box">SCORE: <span id="score">0</span></div>
+        <div class="stat-box">LIVES: <span id="lives">3</span> ❤️</div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const inputField = document.getElementById('input-field');
+        const scoreDisplay = document.getElementById('score');
+        const livesDisplay = document.getElementById('lives');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        let score = 0;
+        let lives = 3;
+        let fallingWords = [];
+        let gameInterval;
+        let wordSpawnInterval;
+        let gameRunning = false;
+        let fallSpeed = 1.5; 
+
+        // ऑनलाइन डिक्शनरी API से रैंडम शब्द लाने का फंक्शन
+        async function fetchOnlineWord() {
+            try {
+                const response = await fetch('https://herokuapp.com');
+                const data = await response.json();
+                return data[0]; 
+            } catch (error) {
+                // अगर इंटरनेट स्लो हो तो बैकअप वर्ड्स
+                const backupWords = ['internet', 'online', 'browser', 'server', 'network'];
+                return backupWords[Math.floor(Math.random() * backupWords.length)];
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            fallSpeed = 1.5;
+            fallingWords.forEach(w => w.element.remove());
+            fallingWords = [];
+            
+            scoreDisplay.innerText = score;
+            livesDisplay.innerText = lives;
+            gameOverScreen.style.display = 'none';
+            inputField.disabled = false;
+            inputField.value = '';
+            inputField.focus();
+            gameRunning = true;
+
+            clearInterval(gameInterval);
+            clearInterval(wordSpawnInterval);
+            
+            gameInterval = setInterval(updateGame, 20);
+            wordSpawnInterval = setInterval(spawnWord, 2200); // 2.2 सेकंड का समय दिया है ताकि API से शब्द लोड हो सके
+        }
+
+        async function spawnWord() {
+            if (!gameRunning) return;
+
+            // ऑनलाइन शब्द लोड करें
+            const currentWord = await fetchOnlineWord();
+            
+            // अगर शब्द लोड होने से पहले गेम बंद हो गया हो
+            if (!gameRunning) return;
+
+            const wordElement = document.createElement('div');
+            wordElement.classList.add('word');
+            wordElement.innerText = currentWord;
+
+            const randomX = Math.floor(Math.random() * (gameContainer.offsetWidth - 150));
+            wordElement.style.left = randomX + 'px';
+            wordElement.style.top = '0px';
+
+            gameContainer.appendChild(wordElement);
+
+            fallingWords.push({
+                element: wordElement,
+                text: currentWord.toLowerCase(),
+                top: 0
+            });
+        }
+
+        function updateGame() {
+            for (let i = fallingWords.length - 1; i >= 0; i--) {
+                let word = fallingWords[i];
+                word.top += fallSpeed;
+                word.element.style.top = word.top + 'px';
+
+                if (word.top > gameContainer.offsetHeight - 40) {
+                    word.element.remove();
+                    fallingWords.splice(i, 1);
+                    lives--;
+                    livesDisplay.innerText = lives;
+
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            }
+        }
+
+        inputField.addEventListener('input', () => {
+            const typedText = inputField.value.trim().toLowerCase();
+
+            for (let i = 0; i < fallingWords.length; i++) {
+                if (fallingWords[i].text === typedText) {
+                    fallingWords[i].element.remove(); 
+                    fallingWords.splice(i, 1); 
+                    inputField.value = ''; 
+                    
+                    score += 10;
+                    scoreDisplay.innerText = score;
+
+                    if (score % 50 === 0) {
+                        fallSpeed += 0.3;
+                    }
+                    break;
+                }
+            }
+        });
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameInterval);
+            clearInterval(wordSpawnInterval);
+            inputField.disabled = true;
+            finalScoreDisplay.innerText = "Your Final Score: " + score;
+            gameOverScreen.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

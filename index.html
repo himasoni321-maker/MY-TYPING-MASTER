@@ -154,7 +154,7 @@
         function startGame() {
             score = 0;
             lives = 3;
-            fallSpeed = 1.5;
+            fallSpeed = 0.8;
             fallingWords.forEach(w => w.element.remove());
             fallingWords = [];
             
@@ -170,7 +170,7 @@
             clearInterval(wordSpawnInterval);
             
             gameInterval = setInterval(updateGame, 20);
-            wordSpawnInterval = setInterval(spawnWord, 2200); // 2.2 सेकंड का समय दिया है ताकि API से शब्द लोड हो सके
+            wordSpawnInterval = setInterval(spawnWord, 5000); // 2.2 सेकंड का समय दिया है ताकि API से शब्द लोड हो सके
         }
 
         async function spawnWord() {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Keyboard Typing Master</title>
+    <title>My Book Vocabulary Typing Game</title>
     <style>
         body {
             background-color: #1e1e24;
@@ -105,7 +105,7 @@
 </head>
 <body>
 
-    <h1>Online Typing Game ⌨️</h1>
+    <h1>Vocabulary Practice ⌨️</h1>
     
     <div id="game-container">
         <div id="game-over-screen">
@@ -130,31 +130,29 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         const finalScoreDisplay = document.getElementById('final-score');
 
+        // 📝 नीचे दी गई लिस्ट में आप अपनी बुक के जितने चाहें उतने शब्द जोड़ सकते हैं!
+        // बस ध्यान रहे कि हर शब्द के दोनों तरफ ' ' हो और बीच में कॉमा (,) लगा हो।
+        const wordList = [
+            'achievement', 'ambassador', 'anonymous', 'anxiety', 'accustom', 'autumn', 'acclamation', 'aggregate', 'amateur', 'agility', 'battalion', 'buffoon', 'biscuit',
+            'beneficial', 'buffalo', 'bankruptcy', 'committee', 'absurd', 'accolade', 'accomplice', 'affable', 'acumen', 'terrible', 'charge', 'blame', 'foolish', 'criticism', 
+            'opponent', 'chide', 'agony', 'distress', 'selfish', 'anarchy', 'conviction', 'haughty', 'native', 'atone', 'anonymous', 'unknown', 'identified', 'timid', 'confront', 'fertile', 'pleasure', 'lucid', 
+            'irritation', 'nagging', 'annoyance', 'ambiguous', 'equivoal', 'chaos', 'expiate', 'aride', 'diligent', 'dislike', 'love', 'antipathy', 'aversion', 'diligent', 
+            'bounty', 'bonus', 'gift', 'rob', 'capture', 'boorish', 'rustic', 'rough', 'civilized', 'gentle', 'shortness', 'brief', 'favour', 'charm', 'entice', 'bias', 'justice', 'abandon', 'expel', 'harbour', 'merry', 'discourage', 'good', 'dog', 'apple', 
+            'elephant', 'lion', 'monckey', 'half', 'calf', 'admit', 'harmlessss', 'baleful', 'noxious', 'hurtful', 'banish', 'lament', 'base', 'bliss', 'brash', 'beckon', 'coneal', 'compliance', 'commotion', 'colossal', 'churlish', 'chafe', 'clemency', 'colddle', 'cold',
+            'castigate', 'convivial', 'corroborate', 'contempt', 'convet', 'coy', 'craven', 'crafty', 'innate', 'inborn', 'natural', 'cloak', 'acquired', 'extraneous', 'disclose', 'submission', 'refusal', 'rejection', 'coax', 'cajole', 
+        ];
         let score = 0;
         let lives = 3;
         let fallingWords = [];
         let gameInterval;
         let wordSpawnInterval;
         let gameRunning = false;
-        let fallSpeed = 1.5; 
-
-        // ऑनलाइन डिक्शनरी API से रैंडम शब्द लाने का फंक्शन
-        async function fetchOnlineWord() {
-            try {
-                const response = await fetch('https://herokuapp.com');
-                const data = await response.json();
-                return data[0]; 
-            } catch (error) {
-                // अगर इंटरनेट स्लो हो तो बैकअप वर्ड्स
-                const backupWords = ['internet', 'online', 'browser', 'server', 'network'];
-                return backupWords[Math.floor(Math.random() * backupWords.length)];
-            }
-        }
+        let fallSpeed = 0.8; // शुरुआती स्पीड (धीमी)
 
         function startGame() {
             score = 0;
             lives = 3;
-            fallSpeed = 0.8;
+            fallSpeed = 0.8; 
             fallingWords.forEach(w => w.element.remove());
             fallingWords = [];
             
@@ -170,21 +168,18 @@
             clearInterval(wordSpawnInterval);
             
             gameInterval = setInterval(updateGame, 20);
-            wordSpawnInterval = setInterval(spawnWord, 5000); // 2.2 सेकंड का समय दिया है ताकि API से शब्द लोड हो सके
+            wordSpawnInterval = setInterval(spawnWord, 4000); // हर 4 सेकंड में नया शब्द आएगा
         }
 
-        async function spawnWord() {
+        function spawnWord() {
             if (!gameRunning) return;
 
-            // ऑनलाइन शब्द लोड करें
-            const currentWord = await fetchOnlineWord();
-            
-            // अगर शब्द लोड होने से पहले गेम बंद हो गया हो
-            if (!gameRunning) return;
+            // आपकी लिस्ट में से पूरी तरह से रैंडम (Random) शब्द चुनना
+            const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
 
             const wordElement = document.createElement('div');
             wordElement.classList.add('word');
-            wordElement.innerText = currentWord;
+            wordElement.innerText = randomWord;
 
             const randomX = Math.floor(Math.random() * (gameContainer.offsetWidth - 150));
             wordElement.style.left = randomX + 'px';
@@ -194,7 +189,7 @@
 
             fallingWords.push({
                 element: wordElement,
-                text: currentWord.toLowerCase(),
+                text: randomWord.toLowerCase().trim(),
                 top: 0
             });
         }
@@ -230,8 +225,9 @@
                     score += 10;
                     scoreDisplay.innerText = score;
 
+                    // हर 50 पॉइंट पर थोड़ी सी स्पीड बढ़ेगी ताकि गेम मजेदार रहे
                     if (score % 50 === 0) {
-                        fallSpeed += 0.3;
+                        fallSpeed += 0.15; 
                     }
                     break;
                 }
@@ -249,3 +245,4 @@
     </script>
 </body>
 </html>
+
